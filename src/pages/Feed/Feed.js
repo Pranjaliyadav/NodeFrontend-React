@@ -50,7 +50,7 @@ class Feed extends Component {
       page--;
       this.setState({ postPage: page });
     }
-    fetch('URL')
+    fetch('http://localhost:8080/feed/posts')
       .then(res => {
         if (res.status !== 200) {
           throw new Error('Failed to fetch posts.');
@@ -220,11 +220,11 @@ class Feed extends Component {
           </Button>
         </section>
         <section className="feed">
-          {/* {this.state.postsLoading && (
+          {this.state.postsLoading && (
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
               <Loader />
             </div>
-          )} */}
+          )}
           {this.state.posts.length <= 0 && !this.state.postsLoading ? (
             <p style={{ textAlign: 'center' }}>No posts found.</p>
           ) : null}
