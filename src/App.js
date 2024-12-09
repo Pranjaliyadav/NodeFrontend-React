@@ -72,6 +72,7 @@ class App extends Component {
     fetch('http://localhost:8080/graphql',{
       method : 'POST',
       headers : {
+        
         'Content-Type' : 'application/json'
       },
       body : JSON.stringify(graphqlQuery)
@@ -89,15 +90,15 @@ class App extends Component {
         return res.json();
       })
       .then(resData => {
-        console.log(resData);
+        console.log(resData, "loginUs");
         this.setState({
           isAuth: true,
           token: resData.data.loginUser.token,
           authLoading: false,
           userId: resData.data.loginUser.userId
         });
-        localStorage.setItem('token', resData.token);
-        localStorage.setItem('userId', resData.userId);
+        localStorage.setItem('token', resData.data.loginUser.token);
+        localStorage.setItem('userId', resData.data.loginUser.userId);
         const remainingMilliseconds = 60 * 60 * 1000;
         const expiryDate = new Date(
           new Date().getTime() + remainingMilliseconds

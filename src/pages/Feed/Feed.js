@@ -53,26 +53,52 @@ class Feed extends Component {
       page--;
       this.setState({ postPage: page });
     }
-    fetch('http://localhost:8080/feed/posts?page='+page,{
-      headers : {
-        Authorization : `Bearer ${this.props.token}`
+    const graphqlQuery = {
+      query:`{
+      getPosts{
+      posts{
+      _id
+      creator{name}
+      createdAt
+      title
+      content
+      imageUrl
       }
+      totalPosts
+      }}
+      `
+    }
+
+
+    fetch('http://localhost:8080/graphql',{
+      method : 'POST',
+      headers : {
+        Authorization : `Bearer ${this.props.token}`,
+        'Content-Type' : 'application/json'
+      },
+      body : JSON.stringify(graphqlQuery)
     })
       .then(res => {
-        if (res.status !== 200) {
-          throw new Error('Failed to fetch posts.');
+        console.log("getpos", res, this.props.token)
+        if ( res.errors && res.errors[0].status=== 422 ) {
+          throw new Error(
+          res.errors[0].data[0].message
+          );
+        }
+        if(res.errors){
+          throw new Error('Fetching data failed')
         }
         return res.json();
       })
       .then(resData => {
         this.setState({
-          posts: resData.posts.map(post => {
+          posts: resData.data.getPosts.posts.map(post => {
             return {
               ...post,
               imagePath : post.imageUrl
             }
           }),
-          totalPosts: resData.totalItems,
+          totalPosts: resData.data.getPosts.totalPosts,
           postsLoading: false
         });
       })
@@ -128,46 +154,56 @@ class Feed extends Component {
   formData.append('title', postData.title)
   formData.append('content', postData.content)
   formData.append('image',postData.image)
-    let url = 'http://localhost:8080/feed/create-post';
-    let method = 'POST'
-    if (this.state.editPost) {
-      url = 'http://localhost:8080/feed/post/' + this.state.editPost._id;
-    method='PUT'
+  
+    let graphqlQuery ={
+      query :  `
+      mutation{
+      createPost(postCreateInput : {title : "${postData.title}", content : "${postData.content}", imageUrl : "${"rvfdcx.com"}"}){
+      _id
+      title
+      content
+      creator { 
+      name
+      }
+      createdAt
+      }
+      }
+      `
     }
-
-    fetch(url,{
-      method,
+    console.log("here props", this.props.token)
+    fetch('http://localhost:8080/graphql',{
+      method : 'POST',
       headers : {
-        Authorization : `Bearer ${this.props.token}`
+        Authorization : `Bearer ${this.props.token}`,
+        'Content-Type' : 'application/json'
       },
-      body :formData
+      body :JSON.stringify(graphqlQuery)
     })
       .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Creating or editing a post failed!');
+        if ( res.errors && res.errors[0].status=== 422 ) {
+          throw new Error(
+          res.errors[0].data[0].message
+          );
+        }
+        if(res.errors){
+          throw new Error('Post creation failed')
         }
         return res.json();
       })
       .then(resData => {
         console.log(resData, "here created")
-        // const post = {
-        //   _id: resData.post._id,
-        //   title: resData.post.title,
-        //   content: resData.post.content,
-        //   creator: resData.post.creator,
-        //   createdAt: resData.post.createdAt
-        // };
+        const post ={
+
+          _id : resData.data.createPost._id,
+          title : resData.data.createPost.title,
+          content : resData.data.createPost.content,
+          createdAt : resData.data.createPost.createdAt,
+          creator : resData.data.createPost.creator,
+
+
+        }
         this.setState(prevState => {
-          // let updatedPosts = [...prevState.posts];
-          // if (prevState.editPost) {
-          //   const postIndex = prevState.posts.findIndex(
-          //     p => p._id === prevState.editPost._id
-          //   );
-          //   updatedPosts[postIndex] = post;
-          // } 
-          // else if (prevState.posts.length < 2) {
-          //   updatedPosts = prevState.posts.concat(post);
-          // }
+          
           return {
             // posts: updatedPosts,
             isEditing: false,
