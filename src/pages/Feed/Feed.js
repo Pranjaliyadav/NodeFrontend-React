@@ -21,17 +21,38 @@ class Feed extends Component {
   };
 
   componentDidMount() {
-    fetch('http://localhost:8080/auth/get-status',{  headers : {
-      Authorization : `Bearer ${this.props.token}`
-    },})
+    const graphqlQuery = {
+      query : `
+       {
+      getUserStatus{
+      status
+      }
+      }
+      `
+    }
+    fetch('http://localhost:8080/graphql',
+      { method : 'POST',
+
+        
+        headers : {
+      Authorization : `Bearer ${this.props.token}`,
+      'Content-Type' : 'application/json'
+    },
+  body : JSON.stringify(graphqlQuery)
+  })
       .then(res => {
-        if (res.status !== 200) {
-          throw new Error('Failed to fetch user status.');
+        if ( res.errors && res.errors[0].status=== 422 ) {
+          throw new Error(
+          res.errors[0].data[0].message
+          );
+        }
+        if(res.errors){
+          throw new Error('Fetching status failed')
         }
         return res.json();
       })
       .then(resData => {
-        this.setState({ status: resData.status });
+        this.setState({ status: resData.data.getUserStatus.status });
       })
       .catch(this.catchError);
 
@@ -107,17 +128,31 @@ class Feed extends Component {
 
   statusUpdateHandler = event => {
     event.preventDefault();
-    fetch('http://localhost:8080/auth/update-status',{
-      method : 'PUT',
+    console.log("here srarys", this.props.status, this.props)
+    const graphqlQuery = {
+
+      query : `
+      mutation {
+      updateUserStatus(updatedStatus : "${this.state.status}")
+      }
+      `
+    }
+    fetch('http://localhost:8080/graphql',{
+      method : 'POST',
       headers : {
         Authorization : `Bearer ${this.props.token}`,
         'Content-Type' : 'application/json'
       },
-      body : JSON.stringify({status : this.state.status})
+      body : JSON.stringify(graphqlQuery)
     })
       .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error("Can't update status!");
+        if ( res.errors && res.errors[0].status=== 422 ) {
+          throw new Error(
+          res.errors[0].data[0].message
+          );
+        }
+        if(res.errors){
+          throw new Error('Updating status failed')
         }
         return res.json();
       })
