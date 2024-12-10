@@ -150,6 +150,7 @@ class Feed extends Component {
     this.setState({
       editLoading: true
     });
+    
   const formData = new FormData()
   formData.append('image',postData.image)
   if(this.state.editPost){
@@ -165,7 +166,27 @@ class Feed extends Component {
   .then(res => res.json())
   .then(fileRes => {
     const imageUrl = fileRes.filePath
-    let graphqlQuery ={
+
+    let graphqlQuery =
+    this.state.editPost ? 
+    {
+      query :  `
+      mutation{
+      updatePost(id : "${this.state.editPost._id}", postUpdateInput : {title : "${postData.title}", content : "${postData.content}", imageUrl :"${imageUrl ? imageUrl.replace(/\\/g, '\\\\') : imageUrl}"}){
+      _id
+      title
+      imageUrl
+      content
+      creator { 
+      name
+      }
+      createdAt
+      }
+      }
+      `
+    }
+    :
+    {
       query :  `
       mutation{
       createPost(postCreateInput : {title : "${postData.title}", content : "${postData.content}", imageUrl :"${imageUrl.replace(/\\/g, '\\\\')}"}){
@@ -206,12 +227,12 @@ class Feed extends Component {
         console.log(resData, "here created")
         const post ={
 
-          _id : resData.data.createPost._id,
-          title : resData.data.createPost.title,
-          content : resData.data.createPost.content,
-          createdAt : resData.data.createPost.createdAt,
-          creator : resData.data.createPost.creator,
-          imagePath :  resData.data.createPost.imageUrl
+          _id :this.state.editPost ? resData.data.updatePost._id :  resData.data.createPost._id,
+          title :this.state.editPost ? resData.data.updatePost.title :  resData.data.createPost.title,
+          content : this.state.editPost ? resData.data.updatePost.content :   resData.data.createPost.content,
+          createdAt :this.state.editPost ? resData.data.updatePost.createdAt :   resData.data.createPost.createdAt,
+          creator :this.state.editPost ? resData.data.updatePost.creator :  resData.data.createPost.creator,
+          imagePath :this.state.editPost ?  resData.data.updatePost.imageUrl : resData.data.createPost.imageUrl
 
         }
         this.setState(prevState => {
