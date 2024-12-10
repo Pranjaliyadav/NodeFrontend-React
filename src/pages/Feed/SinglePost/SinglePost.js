@@ -47,10 +47,11 @@ class SinglePost extends Component {
         return res.json();
       })
       .then(resData => {
+        console.log("here image pth",{   image : `http://localhost:8080/${resData.data.getPostById.imageUrl}`})
         this.setState({
           title: resData.data.getPostById.title,
           author: resData.data.getPostById.creator.name,
-          image : `http://localhost:8080/${resData.data.getPostById.imageUrl}`,
+          image : `http://localhost:8080/${resData.data.getPostById.imageUrl.replace(/\\/g, '/')}`,
           date: new Date(resData.data.getPostById.createdAt).toLocaleDateString('en-US'),
           content: resData.data.getPostById.content
         });
