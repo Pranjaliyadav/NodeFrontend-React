@@ -151,14 +151,24 @@ class Feed extends Component {
       editLoading: true
     });
   const formData = new FormData()
-  formData.append('title', postData.title)
-  formData.append('content', postData.content)
   formData.append('image',postData.image)
-  
+  if(this.state.editPost){
+    formData.append('oldPath', this.state.editPost.imagePath)
+  }
+  fetch('http://localhost:8080/post-image',{
+    method : 'PUT',
+    headers : {
+      Authorization :`Bearer ${this.props.token}`,
+    },
+  body : formData
+  })
+  .then(res => res.json())
+  .then(fileRes => {
+    const imageUrl = fileRes.filePath
     let graphqlQuery ={
       query :  `
       mutation{
-      createPost(postCreateInput : {title : "${postData.title}", content : "${postData.content}", imageUrl : "${"rvfdcx.com"}"}){
+      createPost(postCreateInput : {title : "${postData.title}", content : "${postData.content}", imageUrl : "${imageUrl}"}){
       _id
       title
       content
@@ -171,7 +181,7 @@ class Feed extends Component {
       `
     }
     console.log("here props", this.props.token)
-    fetch('http://localhost:8080/graphql',{
+  return  fetch('http://localhost:8080/graphql',{
       method : 'POST',
       headers : {
         Authorization : `Bearer ${this.props.token}`,
@@ -179,7 +189,8 @@ class Feed extends Component {
       },
       body :JSON.stringify(graphqlQuery)
     })
-      .then(res => {
+  })
+.then(res => {
         if ( res.errors && res.errors[0].status=== 422 ) {
           throw new Error(
           res.errors[0].data[0].message
@@ -199,7 +210,7 @@ class Feed extends Component {
           content : resData.data.createPost.content,
           createdAt : resData.data.createPost.createdAt,
           creator : resData.data.createPost.creator,
-
+          imagePath :  resData.data.createPost.imageUrl
 
         }
         this.setState(prevState => {
