@@ -1,1 +1,16 @@
 npm i --save socket.io-client
+
+const graphqlQuery = {
+
+      query : `
+      mutation UpdateUserStatus($updatedStatus : String!) {
+      updateUserStatus(updatedStatus : $updatedStatus)
+      }
+      `,
+      variables : {
+        updatedStatus : this.state.status
+      }
+    }
+
+    using graphqlQuery with variables
+    
