@@ -14,3 +14,7 @@ const graphqlQuery = {
 
     using graphqlQuery with variables
     
+
+  npm i --save typescript
+  tsc filename.ts
+tsc --init //initialize ts, and add tsconfig.json
